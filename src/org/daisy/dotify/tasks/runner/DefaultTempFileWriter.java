@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import org.daisy.dotify.common.io.FileIO;
 
 public class DefaultTempFileWriter implements TempFileWriter {
-	public final static String TEMP_DIR;// = System.getProperty("java.io.tmpdir");
+	public static final String TEMP_DIR;// = System.getProperty("java.io.tmpdir");
 	static {
 		String path = System.getProperty("java.io.tmpdir");
 		if (path!=null && !"".equals(path) && new File(path).isDirectory()) {
