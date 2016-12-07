@@ -2,11 +2,11 @@ package org.daisy.dotify.tasks.runner;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-
-import org.daisy.dotify.common.io.FileIO;
 
 public class DefaultTempFileWriter implements TempFileWriter {
 	public static final String TEMP_DIR;// = System.getProperty("java.io.tmpdir");
@@ -92,7 +92,7 @@ public class DefaultTempFileWriter implements TempFileWriter {
 		fileName += ".tmp";
 		File f = new File(tempFilesFolder, fileName);
 		logger.fine("Writing debug file: " + f);
-		FileIO.copyFile(source, f);
+		Files.copy(source.toPath(), f.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		tempFiles.add(f);
 	}
 	
