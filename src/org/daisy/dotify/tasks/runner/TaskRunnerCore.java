@@ -40,6 +40,13 @@ public class TaskRunnerCore implements Closeable {
 		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
 		this.current = DefaultAnnotatedFile.with(fj.getInput()).extension(input).build();
 	}
+	
+	public TaskRunnerCore(AnnotatedFile input, File output, TempFileWriter tfw) throws IOException {
+		this.fj = new TempFileHandler(input.getFile(), output);
+		this.tfw = tfw;
+		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
+		this.current = DefaultAnnotatedFile.with(input).file(fj.getInput()).build();
+	}
 
 	/**
 	 * 

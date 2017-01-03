@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.daisy.dotify.api.tasks.AnnotatedFile;
+import org.daisy.dotify.api.tasks.DefaultAnnotatedFile;
 import org.daisy.dotify.api.tasks.InternalTask;
 import org.daisy.dotify.api.tasks.TaskSystemException;
 
@@ -98,6 +100,10 @@ public class TaskRunner {
 	}
 
 	public List<RunnerResult> runTasks(File input, File output, List<InternalTask> tasks) throws IOException, TaskSystemException {
+		return runTasks(DefaultAnnotatedFile.with(input).extension(input).build(), output, tasks);
+	}
+
+	public List<RunnerResult> runTasks(AnnotatedFile input, File output, List<InternalTask> tasks) throws IOException, TaskSystemException {
 		Progress progress = new Progress();
 		logger.info(name + " started on " + progress.getStart());
 		int i = 0;
