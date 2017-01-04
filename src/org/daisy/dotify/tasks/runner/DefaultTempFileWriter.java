@@ -8,8 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+/**
+ * Provides a default implementation of {@link TempFileWriter}.
+ * @author Joel Håkansson
+ */
 public class DefaultTempFileWriter implements TempFileWriter {
-	public static final String TEMP_DIR;// = System.getProperty("java.io.tmpdir");
+	/**
+	 * Defines a path to a temporary folder. 
+	 */
+	public static final String TEMP_DIR;
 	static {
 		String path = System.getProperty("java.io.tmpdir");
 		if (path!=null && !"".equals(path) && new File(path).isDirectory()) {
@@ -24,10 +31,17 @@ public class DefaultTempFileWriter implements TempFileWriter {
 	private final String prefix;
 	private final List<File> tempFiles;
 	
+	/**
+	 * Creates a default temp file writer builder.
+	 */
 	public static class Builder {
 		private File tempFilesFolder = new File(TEMP_DIR);
-		public String prefix = "";
+		private String prefix = "";
+		/**
+		 * Creates a new empty builder.
+		 */
 		public Builder() {
+			super();
 		}
 		/**
 		 * Sets the prefix to use when writing temp files
@@ -66,6 +80,10 @@ public class DefaultTempFileWriter implements TempFileWriter {
 			}
 			return this;
 		}
+		/**
+		 * Creates a new default temp file writer.
+		 * @return returns a new default temp file writer
+		 */
 		public DefaultTempFileWriter build() {
 			return new DefaultTempFileWriter(this);
 		}

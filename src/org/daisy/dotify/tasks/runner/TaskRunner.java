@@ -42,6 +42,9 @@ public class TaskRunner {
 			this.name = name;
 		}
 		
+		/**
+		 * Creates a new builder with the default name.
+		 */
 		public Builder() {
 			this("Task Runner");
 		}
@@ -99,10 +102,30 @@ public class TaskRunner {
 		return new Builder(name);
 	}
 
+	/**
+	 * Runs a list of tasks starting from the input file as input to the first task, the following tasks use the preceding result
+	 * as input. The final result is written to the output.
+	 * @param input the input file
+	 * @param output the output file
+	 * @param tasks the list of tasks
+	 * @return returns a list of runner results
+	 * @throws IOException if there is an I/O error
+	 * @throws TaskSystemException if there is a problem with the task system
+	 */
 	public List<RunnerResult> runTasks(File input, File output, List<InternalTask> tasks) throws IOException, TaskSystemException {
 		return runTasks(DefaultAnnotatedFile.with(input).extension(input).build(), output, tasks);
 	}
 
+	/**
+	 * Runs a list of tasks starting from the input file as input to the first task, the following tasks use the preceding result
+	 * as input. The final result is written to the output.
+	 * @param input the input file
+	 * @param output the output file
+	 * @param tasks the list of tasks
+	 * @return returns a list of runner results
+	 * @throws IOException if there is an I/O error
+	 * @throws TaskSystemException if there is a problem with the task system
+	 */
 	public List<RunnerResult> runTasks(AnnotatedFile input, File output, List<InternalTask> tasks) throws IOException, TaskSystemException {
 		Progress progress = new Progress();
 		logger.info(name + " started on " + progress.getStart());
