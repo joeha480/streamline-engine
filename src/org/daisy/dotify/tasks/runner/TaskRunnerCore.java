@@ -51,14 +51,6 @@ public class TaskRunnerCore implements Closeable {
 	}
 	
 	/**
-	 * @deprecated use TaskRunnerCore(File input, File output)
-	 * @param fj temp file handler
-	 */
-	public TaskRunnerCore(TempFileHandler fj) {
-		this(fj, null);
-	}
-	
-	/**
 	 * Creates a new task runner core with the specified options. Consider using
 	 * {@link #TaskRunnerCore(AnnotatedFile, File, TempFileWriter)} instead, as it provides
 	 * the task with more details.
@@ -88,19 +80,6 @@ public class TaskRunnerCore implements Closeable {
 		this.current = DefaultAnnotatedFile.with(input).file(fj.getInput()).build();
 	}
 
-	/**
-	 * 
-	 * @param fj temp file handler
-	 * @param tfw temp file writer
-	 * @deprecated use TaskRunnerCore(File input, File output, TempFileWriter tfw)
-	 */
-	public TaskRunnerCore(TempFileHandler fj, TempFileWriter tfw) {
-		this.fj = fj;
-		this.tfw = tfw;
-		this.logger = Logger.getLogger(this.getClass().getCanonicalName());
-		this.current = DefaultAnnotatedFile.with(fj.getInput()).build();
-	}
-	
 	/**
 	 * Runs a single tasks or task bundle (if the task is expanding) and returns the
 	 * results. If a temporary file handler has been assigned, copies of the intermediary
