@@ -1,7 +1,7 @@
 #!/bin/bash
 #version: 2016-08-31
 
-repo=dotify.task-runner
+repo=streamline-engine
 version=`grep 'version='  gradle.properties | grep -E -o '[0-9\.]+.+$'`
 if [[ $version == *SNAPSHOT ]]; then
 	is_release=false

@@ -128,8 +128,6 @@ public class TaskRunner {
 	 */
 	public List<RunnerResult> runTasks(AnnotatedFile input, File output, List<InternalTask> tasks) throws IOException, TaskSystemException {
 		Progress progress = new Progress();
-		logger.warning("The artifact 'org.daisy.dotify:dotify.task-runner' has moved. Please update your build to use the new name 'org.daisy.streamline:streamline-engine'."
-				+ "The first version under the new name is identical to the last under the old name, except for this message.");
 		logger.info(name + " started on " + progress.getStart());
 		int i = 0;
 		NumberFormat nf = NumberFormat.getPercentInstance();
