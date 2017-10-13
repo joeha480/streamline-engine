@@ -1,4 +1,4 @@
-package org.daisy.dotify.tasks.runner;
+package org.daisy.streamline.engine;
 
 import org.daisy.dotify.api.tasks.AnnotatedFile;
 import org.daisy.dotify.api.tasks.InternalTask;

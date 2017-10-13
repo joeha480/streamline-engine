@@ -1,8 +1,8 @@
-package org.daisy.dotify.tasks.runner;
+package org.daisy.streamline.engine;
 
 import static org.junit.Assert.assertEquals;
 
-import org.daisy.dotify.tasks.runner.Progress;
+import org.daisy.streamline.engine.Progress;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")
