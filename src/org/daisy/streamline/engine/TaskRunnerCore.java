@@ -7,14 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.daisy.dotify.api.tasks.AnnotatedFile;
-import org.daisy.dotify.api.tasks.DefaultAnnotatedFile;
-import org.daisy.dotify.api.tasks.ExpandingTask;
-import org.daisy.dotify.api.tasks.InternalTask;
-import org.daisy.dotify.api.tasks.InternalTaskException;
-import org.daisy.dotify.api.tasks.ReadOnlyTask;
-import org.daisy.dotify.api.tasks.ReadWriteTask;
 import org.daisy.dotify.common.io.TempFileHandler;
+import org.daisy.streamline.api.tasks.AnnotatedFile;
+import org.daisy.streamline.api.tasks.DefaultAnnotatedFile;
+import org.daisy.streamline.api.tasks.ExpandingTask;
+import org.daisy.streamline.api.tasks.InternalTask;
+import org.daisy.streamline.api.tasks.InternalTaskException;
+import org.daisy.streamline.api.tasks.ReadOnlyTask;
+import org.daisy.streamline.api.tasks.ReadWriteTask;
 
 /**
  * Provides a utility for running a single task at a time.

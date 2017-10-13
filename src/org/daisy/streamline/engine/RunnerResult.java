@@ -1,7 +1,7 @@
 package org.daisy.streamline.engine;
 
-import org.daisy.dotify.api.tasks.AnnotatedFile;
-import org.daisy.dotify.api.tasks.InternalTask;
+import org.daisy.streamline.api.tasks.AnnotatedFile;
+import org.daisy.streamline.api.tasks.InternalTask;
 
 /**
  * Provides details about a task runner execution.

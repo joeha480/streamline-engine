@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.daisy.dotify.api.tasks.AnnotatedFile;
-import org.daisy.dotify.api.tasks.DefaultAnnotatedFile;
-import org.daisy.dotify.api.tasks.InternalTask;
-import org.daisy.dotify.api.tasks.TaskSystemException;
+import org.daisy.streamline.api.tasks.AnnotatedFile;
+import org.daisy.streamline.api.tasks.DefaultAnnotatedFile;
+import org.daisy.streamline.api.tasks.InternalTask;
+import org.daisy.streamline.api.tasks.TaskSystemException;
 
 /**
  * Utility class to run a list of tasks.
