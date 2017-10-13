@@ -38,7 +38,7 @@ repositories {
 
 dependencies {
 	compile "org.daisy.dotify:dotify.common:3.0.0"
-	compile 'org.daisy.streamline:streamline-api:0.1.0'
+	compile 'org.daisy.streamline:streamline-api:0.2.0'
 	
 	testCompile 'junit:junit:4.7'
 }
