@@ -37,6 +37,7 @@ repositories {
 }
 
 dependencies {
+	compileOnly group: "biz.aQute.bnd", name: "annotation", version: "2.3.0"
 	compile "org.daisy.dotify:dotify.common:3.0.0"
 	compile 'org.daisy.streamline:streamline-api:0.3.0'
 	
