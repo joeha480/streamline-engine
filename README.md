@@ -2,7 +2,7 @@
 [![Type](https://img.shields.io/badge/type-library_bundle-blue.svg)](https://github.com/brailleapps/wiki/wiki/Types)
 
 ## streamline-engine ##
-This contains a small framework for running tasks which implement dotify.task-api.
+This contains a small framework for running tasks which implement streamline-api.
 
 ## Using ##
 To use the bundle, download the [latest release](
