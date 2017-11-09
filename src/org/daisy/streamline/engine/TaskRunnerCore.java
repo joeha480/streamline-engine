@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.daisy.dotify.common.io.TempFileHandler;
 import org.daisy.streamline.api.tasks.AnnotatedFile;
 import org.daisy.streamline.api.tasks.DefaultAnnotatedFile;
 import org.daisy.streamline.api.tasks.ExpandingTask;
