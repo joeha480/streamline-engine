@@ -19,7 +19,7 @@ Tests are run with `gradlew test` (Windows) or `./gradlew test` (Mac/Linux)
 - Compatible with SPI and OSGi
 
 ## Javadoc ##
-Javadoc for the latest Task Runner is available [here](http://brailleapps.github.io/streamline-engine/latest/javadoc/).
+Javadoc for the latest Streamline Engine is available [here](http://brailleapps.github.io/streamline-engine/latest/javadoc/).
 
 ## More information ##
 See the [common wiki](https://github.com/brailleapps/wiki/wiki) for more information.
