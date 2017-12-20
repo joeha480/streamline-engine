@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import org.daisy.streamline.api.media.AnnotatedFile;
@@ -23,6 +26,7 @@ public class TaskRunner {
 	private final boolean writeTempFiles;
 	private final boolean keepTempFilesOnSuccess;
 	private final TempFileWriter tempFileWriter;
+	private final Set<Consumer<ProgressEvent>> progressListeners;
 	
 	/**
 	 * Provides a builder for TaskRunner
@@ -34,6 +38,8 @@ public class TaskRunner {
 		private boolean writeTempFiles = false;
 		private boolean keepTempFilesOnSuccess = false;
 		private TempFileWriter tempFileWriter = null;
+		private Set<Consumer<ProgressEvent>> progressListeners = new HashSet<>();
+
 		/**
 		 * Creates a new builder with the default values
 		 * @param name the name of the task runner
@@ -77,6 +83,15 @@ public class TaskRunner {
 			return this;
 		}
 		/**
+		 * Adds a progress listener.
+		 * @param value the listener
+		 * @return returns this builder
+		 */
+		public Builder addProgressListener(Consumer<ProgressEvent> value) {
+			progressListeners.add(value);
+			return this;
+		}
+		/**
 		 * Creates a new TaskRunner with the current status of the builder
 		 * @return a new TaskRunner
 		 */
@@ -91,6 +106,7 @@ public class TaskRunner {
 		this.writeTempFiles = builder.writeTempFiles;
 		this.keepTempFilesOnSuccess = builder.keepTempFilesOnSuccess;
 		this.tempFileWriter = builder.tempFileWriter;
+		this.progressListeners = builder.progressListeners;
 	}
 	
 	/**
@@ -142,9 +158,9 @@ public class TaskRunner {
 			for (InternalTask task : tasks) {
 				ret.addAll(itr.runTask(task));
 				i++;
-				progress.updateProgress(i/(double)tasks.size());
-				logger.info(nf.format(progress.getProgress()) + " done. ETA " + progress.getETA());
-				//progress(i/tasks.size());
+				ProgressEvent event = progress.updateProgress(i/(double)tasks.size());
+				logger.info(nf.format(event.getProgress()) + " done. ETC " + event.getETC());
+				progressListeners.forEach(v->v.accept(event));
 			}
 		} catch (IOException | TaskSystemException | RuntimeException e) {
 			//This is called after the resource (fj) is closed.
