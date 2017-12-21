@@ -1,6 +1,6 @@
 package org.daisy.streamline.engine;
 
-import org.daisy.streamline.api.tasks.AnnotatedFile;
+import org.daisy.streamline.api.media.AnnotatedFile;
 import org.daisy.streamline.api.tasks.InternalTask;
 
 /**
