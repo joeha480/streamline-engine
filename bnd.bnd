@@ -1,6 +1,9 @@
+Import-Package:  \
+	org.daisy.streamline.api.tasks; provide:=true, *
 Export-Package:  \
 	org.daisy.streamline.engine
 Private-Package:  \
 	org.daisy.streamline.engine.impl
 Include-Resource: / = src/
 -sources: false
+Service-Component: *
