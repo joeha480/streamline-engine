@@ -4,6 +4,5 @@ Export-Package:  \
 	org.daisy.streamline.engine
 Private-Package:  \
 	org.daisy.streamline.engine.impl
-Include-Resource: / = src/
--sources: false
+-sources: true
 Service-Component: *
