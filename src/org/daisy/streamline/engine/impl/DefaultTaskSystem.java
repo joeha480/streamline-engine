@@ -98,8 +98,9 @@ public class DefaultTaskSystem implements TaskSystem {
 	 * @param locale the target locale
 	 * @param parameters the parameters
 	 * @return returns a list of task groups
+	 * @throws TaskSystemException 
 	 */
-	static List<TaskGroupInformation> getPath(TaskGroupFactoryMakerService imf, TaskGroupInformation def, String locale) {
+	static List<TaskGroupInformation> getPath(TaskGroupFactoryMakerService imf, TaskGroupInformation def, String locale) throws TaskSystemException {
 		Set<TaskGroupInformation> specs = imf.list(locale);
 		Map<String, List<TaskGroupInformation>> byInput = byInput(specs);
 
@@ -114,7 +115,7 @@ public class DefaultTaskSystem implements TaskSystem {
 	 * @param inputs a list of specifications ordered by input format
 	 * @return returns the shortest path
 	 */
-	static List<TaskGroupInformation> getPathSpecifications(String input, String output, Map<String, List<TaskGroupInformation>> inputs) {
+	static List<TaskGroupInformation> getPathSpecifications(String input, String output, Map<String, List<TaskGroupInformation>> inputs) throws TaskSystemException {
 		// queue root
 		List<QueueInfo> queue = new ArrayList<>();
 		queue.add(new QueueInfo(new HashMap<>(inputs).remove(input), new ArrayList<TaskGroupInformation>()));
@@ -139,7 +140,7 @@ public class DefaultTaskSystem implements TaskSystem {
 				}
 			}
 		}
-		return Collections.emptyList();
+		throw new TaskSystemException("Cannot find path " + input + "->" + output);
 	}
 	
 	static boolean matchesRequiredOptions(TaskGroupInformation candidate, Map<String, Object> parameters, boolean emptyReturn) {

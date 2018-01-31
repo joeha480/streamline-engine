@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.daisy.streamline.api.tasks.TaskGroupInformation;
+import org.daisy.streamline.api.tasks.TaskSystemException;
 import org.junit.Test;
 @SuppressWarnings("javadoc")
 public class DefaultTaskSystemTest {
@@ -32,7 +33,7 @@ public class DefaultTaskSystemTest {
 	}
 	
 	@Test
-	public void testPath_01() {
+	public void testPath_01() throws TaskSystemException {
 		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "E", inputs);
 		assertEquals(2, ret.size());
 		assertEquals("A -> C (sv-SE)", asString(ret.get(0)));
@@ -40,7 +41,7 @@ public class DefaultTaskSystemTest {
 	}
 	
 	@Test
-	public void testPath_02() {
+	public void testPath_02() throws TaskSystemException {
 		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "F", inputs);
 		assertEquals(3, ret.size());
 		assertEquals("A -> C (sv-SE)", asString(ret.get(0)));
@@ -49,7 +50,7 @@ public class DefaultTaskSystemTest {
 	}
 	
 	@Test
-	public void testPath_03() {
+	public void testPath_03() throws TaskSystemException {
 		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "G", inputs);
 		assertEquals(3, ret.size());
 		assertEquals("A -> B (sv-SE)", asString(ret.get(0)));
@@ -57,38 +58,35 @@ public class DefaultTaskSystemTest {
 		assertEquals("D -> G (sv-SE)", asString(ret.get(2)));
 	}
 	
-	@Test
-	public void testPathLoop_01() {
+	@Test (expected=TaskSystemException.class)
+	public void testPathLoop_01() throws TaskSystemException {
 		Map<String, List<TaskGroupInformation>> inps = new HashMap<>();
 		inps.put("A", buildSpecs(loc, "A", false, "B"));
 		inps.put("B", buildSpecs(loc, "B", false, "A"));
-		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "C", inps);
-		assertEquals(0, ret.size());
+		DefaultTaskSystem.getPathSpecifications("A", "C", inps);
 	}
 	
-	@Test
-	public void testPathLoop_02() {
+	@Test (expected=TaskSystemException.class)
+	public void testPathLoop_02() throws TaskSystemException {
 		Map<String, List<TaskGroupInformation>> inps = new HashMap<>();
 		inps.put("A", buildSpecs(loc, "A", false, "B"));
 		inps.put("B", buildSpecs(loc, "B", false, "C"));
 		inps.put("C", buildSpecs(loc, "C", false, "A"));
-		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "D", inps);
-		assertEquals(0, ret.size());
+		DefaultTaskSystem.getPathSpecifications("A", "D", inps);
 	}
 	
-	@Test
-	public void testPathLoop_03() {
+	@Test (expected=TaskSystemException.class)
+	public void testPathLoop_03() throws TaskSystemException {
 		Map<String, List<TaskGroupInformation>> inps = new HashMap<>();
 		inps.put("A", buildSpecs(loc, "A", false, "B"));
 		inps.put("B", buildSpecs(loc, "B", false, "C"));
 		inps.put("C", buildSpecs(loc, "C", false, "B"));
 		inps.put("D", buildSpecs(loc, "D", false, "E"));
-		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "E", inps);
-		assertEquals(0, ret.size());
+		DefaultTaskSystem.getPathSpecifications("A", "E", inps);
 	}
 	
 	@Test
-	public void testPathEnhance_01() {
+	public void testPathEnhance_01() throws TaskSystemException {
 		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "G", inputsE);
 		assertEquals(7, ret.size());
 		assertEquals("A -> A (sv-SE)", asString(ret.get(0)));
