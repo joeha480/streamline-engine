@@ -2,6 +2,7 @@ package org.daisy.streamline.engine.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,32 +66,62 @@ public class DefaultTaskSystem implements TaskSystem {
 	
 	@Override
 	public CompiledTaskSystem compile(Map<String, Object> pa) throws TaskSystemException {
-		Map<String, Object> h = pa;
 		
-		DefaultCompiledTaskSystem setup = new DefaultCompiledTaskSystem(name, getOptions());
+		CompiledTaskSystemImpl setup = new CompiledTaskSystemImpl(name, getOptions());
+		setup.addOption(new UserOption.Builder("route-by").description("Route by the specified formats").build());
+		Object routeObj = pa.get("route-by");
+		String[] route = null;
+		if (routeObj!=null) {
+			 route = routeObj.toString().split(",\\s*");
+		}
+		List<FormatIdentifier> stops = new ArrayList<>();
+		stops.add(FormatIdentifier.with(inputFormat));
+		if (route!=null) {
+			Arrays.asList(route).stream()
+				.map(FormatIdentifier::with)
+				.forEach(v->stops.add(v));
+		}
+		stops.add(FormatIdentifier.with(outputFormat));
+		for (int i=0; i<stops.size()-1; i++) {
+			setup.addTaskGroups(getPath(imf, new TaskSystemInformation.Builder(stops.get(i), stops.get(i+1)).build(), context), pa);
+		}
 
-		logger.info("Finding path...");
-		for (TaskGroupInformation spec : getPath(imf, new TaskSystemInformation.Builder(FormatIdentifier.with(inputFormat), FormatIdentifier.with(outputFormat)).build(), context)) {
+		return setup;
+	}
+	
+	class CompiledTaskSystemImpl extends DefaultCompiledTaskSystem {
+
+		public CompiledTaskSystemImpl(String name, List<UserOption> options) {
+			super(name, options);
+		}
+		
+		public void addTaskGroups(List<TaskGroupInformation> specs, Map<String, Object> h) throws TaskSystemException {
+			for (TaskGroupInformation spec : specs) {
+				addTaskGroup(spec, h);
+			}
+		}
+		
+		public void addTaskGroup(TaskGroupInformation spec, Map<String, Object> h) throws TaskSystemException {
 			if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
 				// For enhance, only include the options required to enable the task group. Once enabled,
 				// additional options may be presented
 				for (UserOption o : spec.getRequiredOptions()) {
-					setup.addOption(o);
+					addOption(o);
 				}
 			}
-			if (spec.getActivity()==TaskGroupActivity.CONVERT || matchesRequiredOptions(spec, pa, false)) {
+			if (spec.getActivity()==TaskGroupActivity.CONVERT || matchesRequiredOptions(spec, h, false)) {
 				TaskGroup g = imf.newTaskGroup(spec, context);
 				//TODO: these options should be on the group level instead of on the system level
 				List<UserOption> opts = g.getOptions();
 				if (opts!=null) {
 					for (UserOption o : opts) {
-						setup.addOption(o);
+						addOption(o);
 					}
 				}
-				setup.addAll(g.compile(h));				
+				addAll(g.compile(h));
 			}
 		}
-		return setup;
+		
 	}
 	
 	/**
@@ -103,6 +134,7 @@ public class DefaultTaskSystem implements TaskSystem {
 	 * @throws TaskSystemException 
 	 */
 	static List<TaskGroupInformation> getPath(TaskGroupFactoryMakerService imf, TaskSystemInformation def, String locale) throws TaskSystemException {
+		logger.info("Finding path...");
 		Set<TaskGroupInformation> specs = imf.list(locale);
 		Map<String, List<TaskGroupInformation>> byInput = byInput(specs);
 
