@@ -121,19 +121,19 @@ public class DefaultTaskSystem implements TaskSystem {
 		
 		while (!queue.isEmpty()) {
 			QueueInfo current = queue.remove(0);
-			for (TaskGroupInformation candidate : current.getCandidates().getConvert()) {
+			for (TaskGroupInformation candidate : current.getConvert()) {
 				logger.info("Evaluating " + candidate.getInputFormat() + " -> " + candidate.getOutputFormat());
 				if (candidate.getOutputFormat().equals(output)) {
 					List<TaskGroupInformation> ret = new ArrayList<>(current.getSpecs());
-					ret.addAll(current.getCandidates().getEnhance());
+					ret.addAll(current.getEnhance());
 					ret.add(candidate);
 					QueueInfo next = new QueueInfo(new HashMap<>(inputs).remove(candidate.getOutputFormat()), current.getSpecs());
-					ret.addAll(next.getCandidates().getEnhance());
+					ret.addAll(next.getEnhance());
 					return ret;
 				} else {
 					// add for later evaluation
-					QueueInfo info = new QueueInfo(new HashMap<>(inputs).remove(candidate.getOutputFormat()), current.getSpecs());
-					info.getSpecs().addAll(current.getCandidates().getEnhance());
+					QueueInfo info = current.with(new HashMap<>(inputs).remove(candidate.getOutputFormat()), candidate);
+					info.getSpecs().addAll(current.getEnhance());
 					info.getSpecs().add(candidate);
 					queue.add(info);
 				}

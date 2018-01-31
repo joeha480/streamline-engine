@@ -14,7 +14,7 @@ class TaskGroupSpecificationFilter {
 		this.enhance = enhance;
 	}
 
-	static TaskGroupSpecificationFilter filterLocaleGroupByType(List<TaskGroupInformation> candidates) {
+	static TaskGroupSpecificationFilter filterLocaleGroupByType(List<TaskGroupInformation> candidates, List<TaskGroupInformation> exclude) {
 		List<TaskGroupInformation> convert = new ArrayList<>();
 		List<TaskGroupInformation> enhance = new ArrayList<>();
 		if (candidates != null) {
@@ -22,7 +22,9 @@ class TaskGroupSpecificationFilter {
 
 					switch (spec.getActivity()) {
 						case CONVERT:
-							convert.add(spec);
+							if (!exclude.contains(spec)) {
+								convert.add(spec);
+							}
 							break;
 						case ENHANCE:
 							enhance.add(spec);

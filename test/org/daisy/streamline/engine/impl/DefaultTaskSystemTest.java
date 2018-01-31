@@ -58,6 +58,36 @@ public class DefaultTaskSystemTest {
 	}
 	
 	@Test
+	public void testPathLoop_01() {
+		Map<String, List<TaskGroupInformation>> inps = new HashMap<>();
+		inps.put("A", buildSpecs(loc, "A", false, "B"));
+		inps.put("B", buildSpecs(loc, "B", false, "A"));
+		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "C", inps);
+		assertEquals(0, ret.size());
+	}
+	
+	@Test
+	public void testPathLoop_02() {
+		Map<String, List<TaskGroupInformation>> inps = new HashMap<>();
+		inps.put("A", buildSpecs(loc, "A", false, "B"));
+		inps.put("B", buildSpecs(loc, "B", false, "C"));
+		inps.put("C", buildSpecs(loc, "C", false, "A"));
+		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "D", inps);
+		assertEquals(0, ret.size());
+	}
+	
+	@Test
+	public void testPathLoop_03() {
+		Map<String, List<TaskGroupInformation>> inps = new HashMap<>();
+		inps.put("A", buildSpecs(loc, "A", false, "B"));
+		inps.put("B", buildSpecs(loc, "B", false, "C"));
+		inps.put("C", buildSpecs(loc, "C", false, "B"));
+		inps.put("D", buildSpecs(loc, "D", false, "E"));
+		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "E", inps);
+		assertEquals(0, ret.size());
+	}
+	
+	@Test
 	public void testPathEnhance_01() {
 		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "G", inputsE);
 		assertEquals(7, ret.size());
