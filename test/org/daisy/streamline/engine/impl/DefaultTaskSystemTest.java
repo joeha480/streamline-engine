@@ -98,6 +98,13 @@ public class DefaultTaskSystemTest {
 		assertEquals("G -> G (sv-SE)", asString(ret.get(6)));
 	}
 	
+	@Test
+	public void testPathEnhance_02() {
+		List<TaskGroupInformation> ret = DefaultTaskSystem.getPathSpecifications("A", "A", inputsE);
+		assertEquals(1, ret.size());
+		assertEquals("A -> A (sv-SE)", asString(ret.get(0)));
+	}
+	
 	private static List<TaskGroupInformation> buildSpecs(String locale, String input, boolean withEnhance, String ... outputs) {
 		List<TaskGroupInformation> specs = new ArrayList<>();
 		for (String r : outputs) {
