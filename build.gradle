@@ -1,7 +1,8 @@
+plugins {
+    id 'org.dm.bundle' version '0.10.0'
+}
 apply plugin: 'java'
 apply plugin: "maven"
-//custom plugins
-apply plugin: "org.dm.bundle"
 apply plugin: "signing"
 
 group = 'org.daisy.streamline'
@@ -41,11 +42,6 @@ dependencies {
 	compile 'org.daisy.streamline:streamline-api:1.0.0'
 	
 	testCompile 'junit:junit:4.7'
-}
-
-buildscript {
-    repositories { mavenCentral() }
-    dependencies { classpath group: "org.dm.gradle", name: "gradle-bundle-plugin", version: "0.6.4" }
 }
 
 task updateBndVersion() {
