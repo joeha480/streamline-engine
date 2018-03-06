@@ -6,9 +6,9 @@ import org.daisy.streamline.api.tasks.TaskGroupInformation;
 import org.daisy.streamline.api.tasks.TaskSystem;
 import org.daisy.streamline.api.tasks.TaskSystemFactory;
 import org.daisy.streamline.api.tasks.TaskSystemFactoryException;
-
-import aQute.bnd.annotation.component.Component;
-import aQute.bnd.annotation.component.Reference;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
 /**
  * Provides a default task system factory. The default task system
@@ -63,7 +63,7 @@ public class DefaultTaskSystemFactory implements TaskSystemFactory {
 	 * Sets a factory dependency.
 	 * @param service the dependency
 	 */
-	@Reference
+	@Reference(cardinality=ReferenceCardinality.MANDATORY)
 	public void setInputManagerFactory(TaskGroupFactoryMakerService service) {
 		this.imf = service;
 	}
