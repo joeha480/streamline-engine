@@ -6,7 +6,7 @@ This contains a small framework for running tasks which implement streamline-api
 
 ## Using ##
 To use the bundle, download the [latest release](
-http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.daisy.dotify%22%20AND%20a%3A%22streamline-engine%22) from maven central. 
+http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.daisy.streamline%22%20AND%20a%3A%22streamline-engine%22) from maven central. 
 
 ## Building ##
 Build with `gradlew build` (Windows) or `./gradlew build` (Mac/Linux)
