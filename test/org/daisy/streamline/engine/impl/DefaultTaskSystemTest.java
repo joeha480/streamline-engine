@@ -110,7 +110,7 @@ public class DefaultTaskSystemTest {
 	}
 	
 	private static String asString(TaskGroupInformation spec) {
-		return spec.getInputFormat() + " -> " + spec.getOutputFormat() + " (sv-SE)";
+		return spec.getInputType() + " -> " + spec.getOutputType() + " (sv-SE)";
 	}
 
 }
