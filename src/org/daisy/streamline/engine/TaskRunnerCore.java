@@ -9,11 +9,8 @@ import java.util.logging.Logger;
 
 import org.daisy.streamline.api.media.AnnotatedFile;
 import org.daisy.streamline.api.media.DefaultAnnotatedFile;
-import org.daisy.streamline.api.tasks.ExpandingTask;
 import org.daisy.streamline.api.tasks.InternalTask;
 import org.daisy.streamline.api.tasks.InternalTaskException;
-import org.daisy.streamline.api.tasks.ReadOnlyTask;
-import org.daisy.streamline.api.tasks.ReadWriteTask;
 
 /**
  * Provides a utility for running a single task at a time.
@@ -57,7 +54,9 @@ public class TaskRunnerCore implements Closeable {
 	 * @param output the final output file
 	 * @param tfw a temporary file writer for writing debug copies of intermediary files
 	 * @throws IOException if an I/O error occurs
+	 * @deprecated use {@link #TaskRunnerCore(AnnotatedFile, File)}
 	 */
+	@Deprecated
 	public TaskRunnerCore(File input, File output, TempFileWriter tfw) throws IOException {
 		this.fj = new TempFileHandler(input, output);
 		this.tfw = tfw;
@@ -92,28 +91,40 @@ public class TaskRunnerCore implements Closeable {
 	public List<RunnerResult> runTask(InternalTask task) throws InternalTaskException, IOException {
 		List<RunnerResult> ret = new ArrayList<>();
 		RunnerResult.Builder r = new RunnerResult.Builder(current, task);
-		if (task instanceof ExpandingTask) {
-			logger.info("Expanding " + task.getName());
-			List<InternalTask> exp = ((ExpandingTask)task).resolve(current);
-			ret.add(r.success(true).build());
-			for (InternalTask t : exp) {
-				ret.addAll(runTask(t));
+		switch (task.getType()) {
+			case EXPANDING:
+			{
+				logger.info("Expanding " + task.getName());
+				List<InternalTask> exp = task.asExpandingTask().resolve(current);
+				ret.add(r.success(true).build());
+				for (InternalTask t : exp) {
+					ret.addAll(runTask(t));
+				}
+				break;
 			}
-		} else if (task instanceof ReadWriteTask) {
-			logger.info("Running (r/w) " + task.getName());
-			current = ((ReadWriteTask)task).execute(current, fj.getOutput());
-			ret.add(r.success(true).build());
-			if (tfw!=null) {
-				tfw.writeTempFile(fj.getOutput(), task.getName());
+			case READ_WRITE:
+			{
+				logger.info("Running (r/w) " + task.getName());
+				current = task.asReadWriteTask().execute(current, fj.getOutput());
+				ret.add(r.success(true).build());
+				if (tfw!=null) {
+					tfw.writeTempFile(fj.getOutput(), task.getName());
+				}
+				fj.reset();
+				break;
 			}
-			fj.reset();
-		} else if (task instanceof ReadOnlyTask) {
-			logger.info("Running (r) " + task.getName());
-			((ReadOnlyTask)task).execute(current);
-			ret.add(r.success(true).build());
-		} else {
-			logger.warning("Unknown task type, skipping.");
-			ret.add(r.success(false).build());
+			case READ_ONLY:
+			{
+				logger.info("Running (r) " + task.getName());
+				task.asReadOnlyTask().execute(current);
+				ret.add(r.success(true).build());
+				break;
+			}
+			default:
+			{
+				logger.warning("Unknown task type, skipping.");
+				ret.add(r.success(false).build());
+			}
 		}
 		return ret;
 	}

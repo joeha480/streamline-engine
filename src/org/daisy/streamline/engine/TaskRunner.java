@@ -127,7 +127,9 @@ public class TaskRunner {
 	 * @return returns a list of runner results
 	 * @throws IOException if there is an I/O error
 	 * @throws TaskSystemException if there is a problem with the task system
+	 * @deprecated use {@link #runTasks(AnnotatedFile, File, List)}
 	 */
+	@Deprecated
 	public List<RunnerResult> runTasks(File input, File output, List<InternalTask> tasks) throws IOException, TaskSystemException {
 		return runTasks(DefaultAnnotatedFile.with(input).extension(input).build(), output, tasks);
 	}

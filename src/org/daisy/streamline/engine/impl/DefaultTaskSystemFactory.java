@@ -1,11 +1,17 @@
 package org.daisy.streamline.engine.impl;
 
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.daisy.streamline.api.media.FormatIdentifier;
 import org.daisy.streamline.api.tasks.TaskGroupFactoryMaker;
 import org.daisy.streamline.api.tasks.TaskGroupFactoryMakerService;
-import org.daisy.streamline.api.tasks.TaskGroupInformation;
 import org.daisy.streamline.api.tasks.TaskSystem;
+import org.daisy.streamline.api.tasks.TaskSystemException;
 import org.daisy.streamline.api.tasks.TaskSystemFactory;
 import org.daisy.streamline.api.tasks.TaskSystemFactoryException;
+import org.daisy.streamline.api.tasks.TaskSystemInformation;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -23,20 +29,47 @@ public class DefaultTaskSystemFactory implements TaskSystemFactory {
 
 	@Override
 	public boolean supportsSpecification(String inputFormat, String outputFormat, String locale) {
-		boolean inputMatch = false;
-		boolean outputMatch = false;
-		for (TaskGroupInformation info : imf.list(locale)) {
-			if (info.getInputFormat().equals(inputFormat)) {
-				inputMatch = true;
-			}
-			if (info.getOutputFormat().equals(outputFormat)) {
-				outputMatch = true;
-			}
-			if (inputMatch && outputMatch) {
-				return true;
-			}
+		return supportsSpecification(new TaskSystemInformation.Builder(
+				Objects.requireNonNull(FormatIdentifier.with(inputFormat)),
+				Objects.requireNonNull(FormatIdentifier.with(outputFormat)))
+				.locale(Objects.requireNonNull(locale))
+				.build()
+		);
+	}
+	
+	private boolean supportsSpecification(TaskSystemInformation x) {	
+		try {
+			DefaultTaskSystem.getPath(imf, x, x.getLocale().get());
+			return true;
+		} catch (TaskSystemException e) {
+			return false;
 		}
-		return false;
+	}
+
+	@Override
+	public Set<FormatIdentifier> listInputs() {
+		return imf.listAll().stream().map(v->v.getInputType()).collect(Collectors.toSet());
+	}
+
+	@Override
+	public Set<FormatIdentifier> listOutputs() {
+		return imf.listAll().stream().map(v->v.getOutputType()).collect(Collectors.toSet());
+	}
+
+	@Override
+	public Set<TaskSystemInformation> listForInput(FormatIdentifier input, String locale) {
+		return imf.listAll().stream()
+			.map(v->new TaskSystemInformation.Builder(input, v.getOutputType()).locale(locale).build())
+			.filter(v->supportsSpecification(v))
+			.collect(Collectors.toSet());
+	}
+
+	@Override
+	public Set<TaskSystemInformation> listForOutput(FormatIdentifier output, String locale) {
+		return imf.listAll().stream()
+				.map(v->new TaskSystemInformation.Builder(v.getInputType(), output).locale(locale).build())
+				.filter(v->supportsSpecification(v))
+				.collect(Collectors.toSet());
 	}
 
 	@Override

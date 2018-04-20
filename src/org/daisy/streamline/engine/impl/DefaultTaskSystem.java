@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.daisy.streamline.api.media.FormatIdentifier;
 import org.daisy.streamline.api.option.UserOption;
 import org.daisy.streamline.api.tasks.CompiledTaskSystem;
 import org.daisy.streamline.api.tasks.DefaultCompiledTaskSystem;
@@ -16,6 +17,7 @@ import org.daisy.streamline.api.tasks.TaskGroupFactoryMakerService;
 import org.daisy.streamline.api.tasks.TaskGroupInformation;
 import org.daisy.streamline.api.tasks.TaskSystem;
 import org.daisy.streamline.api.tasks.TaskSystemException;
+import org.daisy.streamline.api.tasks.TaskSystemInformation;
 
 
 /**
@@ -67,7 +69,7 @@ public class DefaultTaskSystem implements TaskSystem {
 		DefaultCompiledTaskSystem setup = new DefaultCompiledTaskSystem(name, getOptions());
 
 		logger.info("Finding path...");
-		for (TaskGroupInformation spec : getPath(imf, TaskGroupInformation.newConvertBuilder(inputFormat, outputFormat).build(), context)) {
+		for (TaskGroupInformation spec : getPath(imf, new TaskSystemInformation.Builder(FormatIdentifier.with(inputFormat), FormatIdentifier.with(outputFormat)).build(), context)) {
 			if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
 				// For enhance, only include the options required to enable the task group. Once enabled,
 				// additional options may be presented
@@ -99,11 +101,11 @@ public class DefaultTaskSystem implements TaskSystem {
 	 * @return returns a list of task groups
 	 * @throws TaskSystemException 
 	 */
-	static List<TaskGroupInformation> getPath(TaskGroupFactoryMakerService imf, TaskGroupInformation def, String locale) throws TaskSystemException {
+	static List<TaskGroupInformation> getPath(TaskGroupFactoryMakerService imf, TaskSystemInformation def, String locale) throws TaskSystemException {
 		Set<TaskGroupInformation> specs = imf.list(locale);
 		Map<String, List<TaskGroupInformation>> byInput = byInput(specs);
 
-		return getPathSpecifications(def.getInputFormat(), def.getOutputFormat(), byInput);
+		return getPathSpecifications(def.getInputType().getIdentifier(), def.getOutputType().getIdentifier(), byInput);
 	}
 	
 	/**
@@ -122,17 +124,17 @@ public class DefaultTaskSystem implements TaskSystem {
 		while (!queue.isEmpty()) {
 			QueueInfo current = queue.remove(0);
 			for (TaskGroupInformation candidate : current.getConvert()) {
-				logger.info("Evaluating " + candidate.getInputFormat() + " -> " + candidate.getOutputFormat());
-				if (candidate.getOutputFormat().equals(output)) {
+				logger.fine("Evaluating " + candidate.getInputType() + " -> " + candidate.getOutputType());
+				if (candidate.getOutputType().getIdentifier().equals(output)) {
 					List<TaskGroupInformation> ret = new ArrayList<>(current.getSpecs());
 					ret.addAll(current.getEnhance());
 					ret.add(candidate);
-					QueueInfo next = new QueueInfo(new HashMap<>(inputs).remove(candidate.getOutputFormat()), current.getSpecs());
+					QueueInfo next = new QueueInfo(new HashMap<>(inputs).remove(candidate.getOutputType().getIdentifier()), current.getSpecs());
 					ret.addAll(next.getEnhance());
 					return ret;
 				} else {
 					// add for later evaluation
-					QueueInfo info = current.with(new HashMap<>(inputs).remove(candidate.getOutputFormat()), candidate);
+					QueueInfo info = current.with(new HashMap<>(inputs).remove(candidate.getOutputType().getIdentifier()), candidate);
 					info.getSpecs().addAll(current.getEnhance());
 					info.getSpecs().add(candidate);
 					queue.add(info);
@@ -163,10 +165,10 @@ public class DefaultTaskSystem implements TaskSystem {
 	static Map<String, List<TaskGroupInformation>> byInput(Set<TaskGroupInformation> specs) {
 		Map<String, List<TaskGroupInformation>> ret = new HashMap<>();
 		for (TaskGroupInformation spec : specs) {
-			List<TaskGroupInformation> group = ret.get(spec.getInputFormat());
+			List<TaskGroupInformation> group = ret.get(spec.getInputType().getIdentifier());
 			if (group==null) {
 				group = new ArrayList<>();
-				ret.put(spec.getInputFormat(), group);
+				ret.put(spec.getInputType().getIdentifier(), group);
 			}
 			group.add(spec);
 		}
