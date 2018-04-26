@@ -2,10 +2,16 @@ package org.daisy.streamline.engine;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -30,6 +36,8 @@ public class DefaultTempFileWriter implements TempFileWriter {
 	private final File tempFilesFolder;
 	private final String prefix;
 	private final List<File> tempFiles;
+	private final List<Path> tempFolders;
+	private int currentIndex;
 	
 	/**
 	 * Creates a default temp file writer builder.
@@ -94,12 +102,13 @@ public class DefaultTempFileWriter implements TempFileWriter {
 		this.tempFilesFolder = builder.tempFilesFolder;
 		this.prefix = builder.prefix + "@" + Integer.toHexString((int)(System.currentTimeMillis()-1261440000000l));
 		this.tempFiles = new ArrayList<>();
+		this.tempFolders = new ArrayList<>();
+		this.currentIndex = 0;
 	}
 	
-	@Override
-	public void writeTempFile(File source, String identifier) throws IOException {
-		int i = tempFiles.size();
-		String fileNumber = ""+(i+1);
+	private synchronized String makeName(String identifier) {
+		String fileNumber = ""+(currentIndex+1);
+		currentIndex++;
 		while (fileNumber.length()<3) {
 			fileNumber = "0" + fileNumber;
 		}
@@ -107,11 +116,55 @@ public class DefaultTempFileWriter implements TempFileWriter {
 						+ fileNumber + "-" 
 						+ truncate(identifier, 20)
 					).replaceAll("[^a-zA-Z0-9@\\-]+", "_");
-		fileName += ".tmp";
-		File f = new File(tempFilesFolder, fileName);
-		logger.fine("Writing debug file: " + f);
+		return fileName;
+	}
+	
+	@Override
+	public void writeTempFile(File source, String identifier) throws IOException {
+		String fileName = makeName(identifier);
+		File f = new File(tempFilesFolder, fileName + ".tmp");
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine("Writing debug file: " + f);
+		}
 		Files.copy(source.toPath(), f.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		tempFiles.add(f);
+	}
+	
+	@Override	
+	public void writeTempFolder(Path source, String identifier) throws IOException {
+		if (!Files.isDirectory(source)) {
+			throw new IllegalArgumentException();
+		}
+		String folderName = makeName(identifier);
+		Path target = tempFilesFolder.toPath().resolve(folderName);
+		Files.createDirectories(target);
+		if (logger.isLoggable(Level.FINE)) {
+			logger.fine("Writing debug file: " + target.toAbsolutePath().toString());
+		}
+		Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+			@Override
+			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+					throws IOException
+			{
+				Path targetdir = target.resolve(source.relativize(dir));
+				try {
+					Files.copy(dir, targetdir);
+				} catch (FileAlreadyExistsException e) {
+					if (!Files.isDirectory(targetdir)) {
+						throw e;
+					}
+				}
+				return FileVisitResult.CONTINUE;
+			}
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+					throws IOException
+			{
+				Files.copy(file, target.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
+				return FileVisitResult.CONTINUE;
+			}
+		});
+		tempFolders.add(target);
 	}
 	
 	private String truncate(String str, int pos) {
@@ -130,5 +183,15 @@ public class DefaultTempFileWriter implements TempFileWriter {
 			}
 		}
 		tempFiles.clear();
+		for (Path start : tempFolders) {
+			try {
+				PathTools.deleteRecursive(start, true);
+			} catch (IOException e) {
+				logger.log(Level.WARNING, "Unable to delete folder: " + start.toAbsolutePath().toString(), e);
+			}
+		}
+		tempFolders.clear();
 	}
+	
+
 }
