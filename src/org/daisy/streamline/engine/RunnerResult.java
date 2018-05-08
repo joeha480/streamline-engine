@@ -59,7 +59,9 @@ public class RunnerResult {
 	/**
 	 * Gets the input file for this result.
 	 * @return returns the input file
+	 * @deprecated
 	 */
+	@Deprecated
 	public AnnotatedFile getInput() {
 		return input;
 	}
