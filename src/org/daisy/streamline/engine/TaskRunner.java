@@ -6,12 +6,16 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import org.daisy.streamline.api.media.AnnotatedFile;
+import org.daisy.streamline.api.media.BaseFolder;
 import org.daisy.streamline.api.media.DefaultAnnotatedFile;
+import org.daisy.streamline.api.media.DefaultFileSet;
+import org.daisy.streamline.api.media.FileSet;
 import org.daisy.streamline.api.tasks.InternalTask;
 import org.daisy.streamline.api.tasks.TaskSystemException;
 
@@ -177,7 +181,65 @@ public class TaskRunner {
 			tempWriter.deleteTempFiles();
 		}
 		logger.info(name + " finished in " + Math.round(progress.timeSinceStart()/100d)/10d + " s");
-		return ret;
+		return ret;		
+	}
+	
+	private static class Variable<T> {
+		private T value = null;
+		T getValue() { return value; }
+		void setValue(T value) { this.value = value;}
+	}
+
+	/**
+	 * Runs a list of tasks starting from the input file as input to the first task, the following tasks use the preceding result
+	 * as input. The final result is written to the output.
+	 * @param input the input file
+	 * @param output the output file
+	 * @param manifestFileName the file name of the manifest file
+	 * @param tasks the list of tasks
+	 * @return returns a list of runner results
+	 * @throws IOException if there is an I/O error
+	 * @throws TaskSystemException if there is a problem with the task system
+	 */
+	public RunnerResults runTasks(FileSet input, BaseFolder output, String manifestFileName, List<InternalTask> tasks) throws IOException, TaskSystemException {
+		Progress progress = new Progress();
+		logger.info(name + " started on " + progress.getStart());
+		int i = 0;
+		NumberFormat nf = NumberFormat.getPercentInstance();
+		TempFileWriter tempWriter =writeTempFiles ? Optional.ofNullable(tempFileWriter).orElseGet(()->new DefaultTempFileWriter.Builder().build()) : null;
+		RunnerResults.Builder builder = new RunnerResults.Builder();
+		// I use this to pass the exception out of the lambda
+		Variable<IOException> ex = new Variable<>();
+		Consumer<FileSet> outputConsumer = current->{
+			try {
+				builder.fileSet(DefaultFileSet.copy(current, output, manifestFileName));
+			} catch (IOException e) {
+				ex.setValue(e);
+			}
+		};
+		try (TaskRunnerCore2 itr = new TaskRunnerCore2(input, outputConsumer, tempWriter)) {
+			for (InternalTask task : tasks) {
+				builder.addResults(itr.runTask(task));
+				i++;
+				ProgressEvent event = progress.updateProgress(i/(double)tasks.size());
+				logger.info(nf.format(event.getProgress()) + " done. ETC " + event.getETC());
+				progressListeners.forEach(v->v.accept(event));
+			}
+		} catch (IOException | TaskSystemException | RuntimeException e) {
+			//This is called after the resource (fj) is closed.
+			//Since the temp file handler is closed the current state will be written to output. However, we do not want it.
+			PathTools.deleteRecursive(output.getPath());
+			throw e;
+		}
+		if (ex.getValue()!=null) {
+			throw ex.getValue();
+		}
+		if (!keepTempFilesOnSuccess && tempWriter!=null) {
+			// Process were successful, delete temp files
+			tempWriter.deleteTempFiles();
+		}
+		logger.info(name + " finished in " + Math.round(progress.timeSinceStart()/100d)/10d + " s");
+		return builder.build();
 	}
 
 }
