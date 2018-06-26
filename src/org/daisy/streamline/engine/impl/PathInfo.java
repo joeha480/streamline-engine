@@ -15,12 +15,14 @@ class PathInfo {
 	private final List<TaskGroupInformation> enhance;
 	private final List<TaskGroupInformation> path;
 	private final List<TaskGroupInformation> exclude;
+	private int remainingDistance = 0;
 
 	private PathInfo(TaskGroupInformation convert, List<TaskGroupInformation> enhance, List<TaskGroupInformation> path, List<TaskGroupInformation> exclude) {
 		this.convert = convert;
 		this.enhance = enhance;
 		this.path = path;
 		this.exclude = exclude;
+		this.remainingDistance = convert.getEvaluationDistance();
 	}
 
 	static Stream<PathInfo> makePaths(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs, List<TaskGroupInformation> exclude) {
@@ -50,6 +52,19 @@ class PathInfo {
 	List<TaskGroupInformation> getPath() {
 		return path;
 	}
+	
+	int getRemainingDistance() {
+		return remainingDistance;
+	}
+
+	void setRemainingDistance(int levels) {
+		if (levels<0) {
+			throw new IllegalArgumentException("Value must be >= 0: " + levels);
+		}
+		this.remainingDistance = levels;
+	}
+
+
 	
 	private static List<TaskGroupInformation> getConverters(List<TaskGroupInformation> candidates, List<TaskGroupInformation> exclude) {
 		Objects.requireNonNull(exclude);

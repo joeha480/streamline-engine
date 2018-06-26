@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.daisy.streamline.api.media.FormatIdentifier;
@@ -125,9 +126,19 @@ public class DefaultTaskSystem implements TaskSystem {
 		List<PathInfo> queue = new ArrayList<>();
 		PathInfo.makePaths(inputs.get(input), Collections.emptyList(), Collections.emptyList())
 				.forEachOrdered(v->queue.add(v));
-		
+		trimRemainingDistanceOffset(queue);
+
 		while (!queue.isEmpty()) {
 			PathInfo current = queue.remove(0);
+			// Push a candidate with lower priority to the end of the queue, unless it's empty 
+			if (!queue.isEmpty() && current.getRemainingDistance()>0) {
+				// decrease queue level
+				current.setRemainingDistance(current.getRemainingDistance()-1);
+				// push back to queue
+				queue.add(current);
+				continue;
+			}
+
 			TaskGroupInformation candidate = current.getConvert();
 			logger.fine("Evaluating " + candidate.getInputType() + " -> " + candidate.getOutputType());
 			if (candidate.getOutputType().getIdentifier().equals(output)) {
@@ -150,10 +161,25 @@ public class DefaultTaskSystem implements TaskSystem {
 					info.add(candidate);
 					PathInfo.makePaths(x, info, excl)
 						.forEachOrdered(v->queue.add(v));
+					trimRemainingDistanceOffset(queue);
 				}
 			}
 		}
 		throw new TaskSystemException("Cannot find path " + input + "->" + output);
+	}
+	
+	/**
+	 * Trims the remaining distance values as not to loop excessively due to high values. 
+	 * @param queue the path info queue
+	 */
+	private static void trimRemainingDistanceOffset(List<PathInfo> queue) {
+		int minDist = queue.stream().mapToInt(v->v.getRemainingDistance()).min().orElse(0);
+		if (minDist>0) {
+			if (logger.isLoggable(Level.FINE)) {
+				logger.fine("Reducing distance: " + minDist);
+			}
+			queue.stream().forEach(v->v.setRemainingDistance(v.getRemainingDistance()-minDist));
+		}
 	}
 	
 	static boolean matchesRequiredOptions(TaskGroupInformation candidate, Map<String, Object> parameters, boolean emptyReturn) {
