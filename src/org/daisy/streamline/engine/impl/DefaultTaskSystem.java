@@ -122,15 +122,15 @@ public class DefaultTaskSystem implements TaskSystem {
 		Map<String, List<TaskGroupInformation>> inputs = Collections.unmodifiableMap(_inputs);
 
 		// queue root
-		List<QueueInfo> queue = new ArrayList<>();
-		queue.add(new QueueInfo(inputs.get(input), new ArrayList<TaskGroupInformation>()));
+		List<PathInfo> queue = new ArrayList<>();
+		queue.add(new PathInfo(inputs.get(input), new ArrayList<TaskGroupInformation>()));
 		
 		while (!queue.isEmpty()) {
-			QueueInfo current = queue.remove(0);
+			PathInfo current = queue.remove(0);
 			for (TaskGroupInformation candidate : current.getConvert()) {
 				logger.fine("Evaluating " + candidate.getInputType() + " -> " + candidate.getOutputType());
 				if (candidate.getOutputType().getIdentifier().equals(output)) {
-					List<TaskGroupInformation> ret = new ArrayList<>(current.getSpecs());
+					List<TaskGroupInformation> ret = new ArrayList<>(current.getPath());
 					ret.addAll(current.getEnhance());
 					ret.add(candidate);
 					List<TaskGroupInformation> enhancers = inputs.get(candidate.getOutputType().getIdentifier());
@@ -140,9 +140,9 @@ public class DefaultTaskSystem implements TaskSystem {
 					return ret;
 				} else {
 					// add for later evaluation
-					QueueInfo info = current.with(inputs.get(candidate.getOutputType().getIdentifier()), candidate);
-					info.getSpecs().addAll(current.getEnhance());
-					info.getSpecs().add(candidate);
+					PathInfo info = current.with(inputs.get(candidate.getOutputType().getIdentifier()), candidate);
+					info.getPath().addAll(current.getEnhance());
+					info.getPath().add(candidate);
 					queue.add(info);
 				}
 			}

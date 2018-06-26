@@ -6,25 +6,25 @@ import java.util.List;
 
 import org.daisy.streamline.api.tasks.TaskGroupInformation;
 
-class QueueInfo {
+class PathInfo {
 	private final TaskGroupSpecificationFilter candidates;
-	private final List<TaskGroupInformation> specs;
+	private final List<TaskGroupInformation> path;
 	private final List<TaskGroupInformation> exclude;
 
-	QueueInfo(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs) {
+	PathInfo(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs) {
 		this(inputs, specs, Collections.emptyList());
 	}
 
-	private QueueInfo(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs, List<TaskGroupInformation> exclude) {
+	private PathInfo(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs, List<TaskGroupInformation> exclude) {
 		this.candidates = TaskGroupSpecificationFilter.filterLocaleGroupByType(inputs, exclude);
-		this.specs = new ArrayList<>(specs);
+		this.path = new ArrayList<>(specs);
 		this.exclude = exclude;
 	}
 
-	QueueInfo with(List<TaskGroupInformation> inputs, TaskGroupInformation filter) {
+	PathInfo with(List<TaskGroupInformation> inputs, TaskGroupInformation filter) {
 		List<TaskGroupInformation> excl = new ArrayList<>(this.exclude);
 		excl.add(filter);
-		return new QueueInfo(inputs, specs, excl);
+		return new PathInfo(inputs, path, excl);
 	}
 
 	List<TaskGroupInformation> getConvert() {
@@ -35,8 +35,8 @@ class QueueInfo {
 		return candidates.getEnhance();
 	}
 
-	List<TaskGroupInformation> getSpecs() {
-		return specs;
+	List<TaskGroupInformation> getPath() {
+		return path;
 	}
 
 }
