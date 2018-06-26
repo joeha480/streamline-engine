@@ -121,29 +121,35 @@ public class DefaultTaskSystem implements TaskSystem {
 		// Changed this to an unmodifiable map, just to make sure that it is not modified.
 		Map<String, List<TaskGroupInformation>> inputs = Collections.unmodifiableMap(_inputs);
 
-		// queue root
+		// queue roots
 		List<PathInfo> queue = new ArrayList<>();
-		queue.add(new PathInfo(inputs.get(input), new ArrayList<TaskGroupInformation>()));
+		PathInfo.makePaths(inputs.get(input), Collections.emptyList(), Collections.emptyList())
+				.forEachOrdered(v->queue.add(v));
 		
 		while (!queue.isEmpty()) {
 			PathInfo current = queue.remove(0);
-			for (TaskGroupInformation candidate : current.getConvert()) {
-				logger.fine("Evaluating " + candidate.getInputType() + " -> " + candidate.getOutputType());
-				if (candidate.getOutputType().getIdentifier().equals(output)) {
-					List<TaskGroupInformation> ret = new ArrayList<>(current.getPath());
-					ret.addAll(current.getEnhance());
-					ret.add(candidate);
-					List<TaskGroupInformation> enhancers = inputs.get(candidate.getOutputType().getIdentifier());
-					if (enhancers!=null) {
-						ret.addAll(PathInfo.getEnhancers(enhancers));
-					}
-					return ret;
-				} else {
-					// add for later evaluation
-					PathInfo info = current.with(inputs.get(candidate.getOutputType().getIdentifier()), candidate);
-					info.getPath().addAll(current.getEnhance());
-					info.getPath().add(candidate);
-					queue.add(info);
+			TaskGroupInformation candidate = current.getConvert();
+			logger.fine("Evaluating " + candidate.getInputType() + " -> " + candidate.getOutputType());
+			if (candidate.getOutputType().getIdentifier().equals(output)) {
+				List<TaskGroupInformation> ret = new ArrayList<>(current.getPath());
+				ret.addAll(current.getEnhance());
+				ret.add(candidate);
+				List<TaskGroupInformation> enhancers = inputs.get(candidate.getOutputType().getIdentifier());
+				if (enhancers!=null) {
+					ret.addAll(PathInfo.getEnhancers(enhancers));
+				}
+				return ret;
+			} else {
+				// add for later evaluation
+				List<TaskGroupInformation> excl = new ArrayList<>(current.getExclude());
+				excl.add(candidate);
+				List<TaskGroupInformation> x = inputs.get(candidate.getOutputType().getIdentifier());
+				if (x!=null) {
+					List<TaskGroupInformation> info = new ArrayList<>(current.getPath());
+					info.addAll(current.getEnhance());
+					info.add(candidate);
+					PathInfo.makePaths(x, info, excl)
+						.forEachOrdered(v->queue.add(v));
 				}
 			}
 		}

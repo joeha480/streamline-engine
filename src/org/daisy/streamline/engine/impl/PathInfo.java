@@ -5,52 +5,53 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.daisy.streamline.api.tasks.TaskGroupActivity;
 import org.daisy.streamline.api.tasks.TaskGroupInformation;
 
 class PathInfo {
-	private final List<TaskGroupInformation> convert;
+	private final TaskGroupInformation convert;
 	private final List<TaskGroupInformation> enhance;
 	private final List<TaskGroupInformation> path;
 	private final List<TaskGroupInformation> exclude;
 
-	PathInfo(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs) {
-		this(inputs, specs, Collections.emptyList());
-	}
-
-	private PathInfo(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs, List<TaskGroupInformation> exclude) {
-		if (inputs != null) {
-			this.convert = getConverters(inputs, exclude);
-			this.enhance = getEnhancers(inputs);
-		} else {
-			this.convert = new ArrayList<>();
-			this.enhance = new ArrayList<>();
-		}
-
-		this.path = new ArrayList<>(specs);
+	private PathInfo(TaskGroupInformation convert, List<TaskGroupInformation> enhance, List<TaskGroupInformation> path, List<TaskGroupInformation> exclude) {
+		this.convert = convert;
+		this.enhance = enhance;
+		this.path = path;
 		this.exclude = exclude;
 	}
 
-	PathInfo with(List<TaskGroupInformation> inputs, TaskGroupInformation filter) {
-		List<TaskGroupInformation> excl = new ArrayList<>(this.exclude);
-		excl.add(filter);
-		return new PathInfo(inputs, path, excl);
+	static Stream<PathInfo> makePaths(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs, List<TaskGroupInformation> exclude) {
+		if (inputs != null) {
+			List<TaskGroupInformation> convert = getConverters(inputs, exclude);
+			List<TaskGroupInformation> enhance = Collections.unmodifiableList(getEnhancers(inputs));
+			List<TaskGroupInformation> path = Collections.unmodifiableList(new ArrayList<>(specs));
+			List<TaskGroupInformation> excl = Collections.unmodifiableList(new ArrayList<>(exclude));
+			return convert.stream().map(c->new PathInfo(c, enhance, path, excl));
+		} else {
+			return Stream.empty();
+		}
 	}
 
-	List<TaskGroupInformation> getConvert() {
+	TaskGroupInformation getConvert() {
 		return convert;
 	}
 
 	List<TaskGroupInformation> getEnhance() {
 		return enhance;
 	}
+	
+	List<TaskGroupInformation> getExclude() {
+		return exclude;
+	}
 
 	List<TaskGroupInformation> getPath() {
 		return path;
 	}
 	
-	static List<TaskGroupInformation> getConverters(List<TaskGroupInformation> candidates, List<TaskGroupInformation> exclude) {
+	private static List<TaskGroupInformation> getConverters(List<TaskGroupInformation> candidates, List<TaskGroupInformation> exclude) {
 		Objects.requireNonNull(exclude);
 		return Objects.requireNonNull(candidates).stream()
 				.filter(v-> v.getActivity()==TaskGroupActivity.CONVERT && !exclude.contains(v))
