@@ -135,7 +135,7 @@ public class DefaultTaskSystem implements TaskSystem {
 					ret.add(candidate);
 					List<TaskGroupInformation> enhancers = inputs.get(candidate.getOutputType().getIdentifier());
 					if (enhancers!=null) {
-						ret.addAll(TaskGroupSpecificationFilter.getEnhancers(enhancers));
+						ret.addAll(PathInfo.getEnhancers(enhancers));
 					}
 					return ret;
 				} else {
