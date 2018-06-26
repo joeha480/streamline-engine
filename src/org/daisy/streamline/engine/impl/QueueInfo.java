@@ -7,36 +7,52 @@ import java.util.List;
 import org.daisy.streamline.api.tasks.TaskGroupInformation;
 
 class QueueInfo {
-	private final TaskGroupSpecificationFilter candidates;
+	private TaskGroupSpecificationFilter candidates;
+	private final List<TaskGroupInformation> inputs;
 	private final List<TaskGroupInformation> specs;
 	private final List<TaskGroupInformation> exclude;
+	private int remainingDistance = 0;
 
 	QueueInfo(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs) {
 		this(inputs, specs, Collections.emptyList());
 	}
 
 	private QueueInfo(List<TaskGroupInformation> inputs, List<TaskGroupInformation> specs, List<TaskGroupInformation> exclude) {
-		this.candidates = TaskGroupSpecificationFilter.filterLocaleGroupByType(inputs, exclude);
+		this.inputs = inputs;
 		this.specs = new ArrayList<>(specs);
 		this.exclude = exclude;
+		this.candidates = null;
 	}
 
 	QueueInfo with(List<TaskGroupInformation> inputs, TaskGroupInformation filter) {
 		List<TaskGroupInformation> excl = new ArrayList<>(this.exclude);
 		excl.add(filter);
-		return new QueueInfo(inputs, specs, excl);
+		QueueInfo ret = new QueueInfo(inputs, this.specs, excl);
+		ret.getSpecs().addAll(getCandidate().getEnhance());
+		ret.getSpecs().add(filter);
+		return ret;
 	}
 
-	List<TaskGroupInformation> getConvert() {
-		return candidates.getConvert();
-	}
-
-	List<TaskGroupInformation> getEnhance() {
-		return candidates.getEnhance();
+	TaskGroupSpecificationFilter getCandidate() {
+		if (candidates==null) {
+			candidates = TaskGroupSpecificationFilter.filterLocaleGroupByType(inputs, exclude);
+		}
+		return candidates;
 	}
 
 	List<TaskGroupInformation> getSpecs() {
 		return specs;
+	}
+
+	int getRemainingDistance() {
+		return remainingDistance;
+	}
+
+	void setRemainingDistance(int levels) {
+		if (levels<0) {
+			throw new IllegalArgumentException("Value must be >= 0: " + levels);
+		}
+		this.remainingDistance = levels;
 	}
 
 }

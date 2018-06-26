@@ -1,6 +1,7 @@
 package org.daisy.streamline.engine.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,28 +117,35 @@ public class DefaultTaskSystem implements TaskSystem {
 	 * @param inputs a list of specifications ordered by input format
 	 * @return returns the shortest path
 	 */
-	static List<TaskGroupInformation> getPathSpecifications(String input, String output, Map<String, List<TaskGroupInformation>> inputs) throws TaskSystemException {
+	static List<TaskGroupInformation> getPathSpecifications(String input, String output, Map<String, List<TaskGroupInformation>> _inputs) throws TaskSystemException {
+		// Changed this to an unmodifiable map, just to make sure that it is not modified.
+		Map<String, List<TaskGroupInformation>> inputs = Collections.unmodifiableMap(_inputs);
 		// queue root
 		List<QueueInfo> queue = new ArrayList<>();
-		queue.add(new QueueInfo(new HashMap<>(inputs).remove(input), new ArrayList<TaskGroupInformation>()));
+		queue.add(new QueueInfo(inputs.get(input), new ArrayList<TaskGroupInformation>()));
 		
 		while (!queue.isEmpty()) {
 			QueueInfo current = queue.remove(0);
-			for (TaskGroupInformation candidate : current.getConvert()) {
+			/*
+			// Push a candidate with lower priority to the end of the queue, unless it's empty 
+			if (!queue.isEmpty() && current.getRemainingDistance()>0) {
+				// decrease queue level
+				current.setRemainingDistance(current.getRemainingDistance()-1);
+				// push back to queue
+				queue.add(current);
+				continue;
+			}*/
+			for (TaskGroupInformation candidate : current.getCandidate().getConvert()) {
 				logger.fine("Evaluating " + candidate.getInputType() + " -> " + candidate.getOutputType());
 				if (candidate.getOutputType().getIdentifier().equals(output)) {
 					List<TaskGroupInformation> ret = new ArrayList<>(current.getSpecs());
-					ret.addAll(current.getEnhance());
+					ret.addAll(current.getCandidate().getEnhance());
 					ret.add(candidate);
-					QueueInfo next = new QueueInfo(new HashMap<>(inputs).remove(candidate.getOutputType().getIdentifier()), current.getSpecs());
-					ret.addAll(next.getEnhance());
+					ret.addAll(TaskGroupSpecificationFilter.getEnhancers(inputs.get(candidate.getOutputType().getIdentifier())));
 					return ret;
 				} else {
 					// add for later evaluation
-					QueueInfo info = current.with(new HashMap<>(inputs).remove(candidate.getOutputType().getIdentifier()), candidate);
-					info.getSpecs().addAll(current.getEnhance());
-					info.getSpecs().add(candidate);
-					queue.add(info);
+					queue.add(current.with(inputs.get(candidate.getOutputType().getIdentifier()), candidate));
 				}
 			}
 		}
