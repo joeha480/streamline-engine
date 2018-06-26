@@ -2,7 +2,10 @@ package org.daisy.streamline.engine.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
+import org.daisy.streamline.api.tasks.TaskGroupActivity;
 import org.daisy.streamline.api.tasks.TaskGroupInformation;
 
 class TaskGroupSpecificationFilter {
@@ -15,26 +18,25 @@ class TaskGroupSpecificationFilter {
 	}
 
 	static TaskGroupSpecificationFilter filterLocaleGroupByType(List<TaskGroupInformation> candidates, List<TaskGroupInformation> exclude) {
-		List<TaskGroupInformation> convert = new ArrayList<>();
-		List<TaskGroupInformation> enhance = new ArrayList<>();
 		if (candidates != null) {
-			for (TaskGroupInformation spec : candidates) {
-
-					switch (spec.getActivity()) {
-						case CONVERT:
-							if (!exclude.contains(spec)) {
-								convert.add(spec);
-							}
-							break;
-						case ENHANCE:
-							enhance.add(spec);
-							break;
-						default:
-							
-					}
-			}
+			return new TaskGroupSpecificationFilter(getConverters(candidates, exclude), getEnhancers(candidates));
+		} else {
+			return new TaskGroupSpecificationFilter(new ArrayList<>(), new ArrayList<>());
 		}
-		return new TaskGroupSpecificationFilter(convert, enhance);
+		
+	}
+
+	static List<TaskGroupInformation> getConverters(List<TaskGroupInformation> candidates, List<TaskGroupInformation> exclude) {
+		Objects.requireNonNull(exclude);
+		return Objects.requireNonNull(candidates).stream()
+				.filter(v-> v.getActivity()==TaskGroupActivity.CONVERT && !exclude.contains(v))
+				.collect(Collectors.toList());
+	}
+
+	static List<TaskGroupInformation> getEnhancers(List<TaskGroupInformation> candidates) {
+		return Objects.requireNonNull(candidates).stream()
+				.filter(v->v.getActivity()==TaskGroupActivity.ENHANCE)
+				.collect(Collectors.toList());
 	}
 
 	List<TaskGroupInformation> getConvert() {
