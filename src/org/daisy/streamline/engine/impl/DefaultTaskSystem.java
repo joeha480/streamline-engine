@@ -1,6 +1,7 @@
 package org.daisy.streamline.engine.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,10 +117,13 @@ public class DefaultTaskSystem implements TaskSystem {
 	 * @param inputs a list of specifications ordered by input format
 	 * @return returns the shortest path
 	 */
-	static List<TaskGroupInformation> getPathSpecifications(String input, String output, Map<String, List<TaskGroupInformation>> inputs) throws TaskSystemException {
+	static List<TaskGroupInformation> getPathSpecifications(String input, String output, Map<String, List<TaskGroupInformation>> _inputs) throws TaskSystemException {
+		// Changed this to an unmodifiable map, just to make sure that it is not modified.
+		Map<String, List<TaskGroupInformation>> inputs = Collections.unmodifiableMap(_inputs);
+
 		// queue root
 		List<QueueInfo> queue = new ArrayList<>();
-		queue.add(new QueueInfo(new HashMap<>(inputs).remove(input), new ArrayList<TaskGroupInformation>()));
+		queue.add(new QueueInfo(inputs.get(input), new ArrayList<TaskGroupInformation>()));
 		
 		while (!queue.isEmpty()) {
 			QueueInfo current = queue.remove(0);
@@ -129,12 +133,12 @@ public class DefaultTaskSystem implements TaskSystem {
 					List<TaskGroupInformation> ret = new ArrayList<>(current.getSpecs());
 					ret.addAll(current.getEnhance());
 					ret.add(candidate);
-					QueueInfo next = new QueueInfo(new HashMap<>(inputs).remove(candidate.getOutputType().getIdentifier()), current.getSpecs());
+					QueueInfo next = new QueueInfo(inputs.get(candidate.getOutputType().getIdentifier()), current.getSpecs());
 					ret.addAll(next.getEnhance());
 					return ret;
 				} else {
 					// add for later evaluation
-					QueueInfo info = current.with(new HashMap<>(inputs).remove(candidate.getOutputType().getIdentifier()), candidate);
+					QueueInfo info = current.with(inputs.get(candidate.getOutputType().getIdentifier()), candidate);
 					info.getSpecs().addAll(current.getEnhance());
 					info.getSpecs().add(candidate);
 					queue.add(info);
