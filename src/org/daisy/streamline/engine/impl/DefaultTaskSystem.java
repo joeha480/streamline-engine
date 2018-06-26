@@ -133,8 +133,10 @@ public class DefaultTaskSystem implements TaskSystem {
 					List<TaskGroupInformation> ret = new ArrayList<>(current.getSpecs());
 					ret.addAll(current.getEnhance());
 					ret.add(candidate);
-					QueueInfo next = new QueueInfo(inputs.get(candidate.getOutputType().getIdentifier()), current.getSpecs());
-					ret.addAll(next.getEnhance());
+					List<TaskGroupInformation> enhancers = inputs.get(candidate.getOutputType().getIdentifier());
+					if (enhancers!=null) {
+						ret.addAll(TaskGroupSpecificationFilter.getEnhancers(enhancers));
+					}
 					return ret;
 				} else {
 					// add for later evaluation
