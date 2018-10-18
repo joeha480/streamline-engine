@@ -37,6 +37,7 @@ import org.daisy.streamline.api.tasks.TaskSystemInformation;
  */
 public class DefaultTaskSystem implements TaskSystem {
 	private static final Logger logger = Logger.getLogger(DefaultTaskSystem.class.getCanonicalName());
+	private static final String ROUTE_BY_KEY = "route-by";
 	private final String inputFormat;
 	private final String outputFormat;
 	private final String context;
@@ -67,9 +68,7 @@ public class DefaultTaskSystem implements TaskSystem {
 	@Override
 	public CompiledTaskSystem compile(Map<String, Object> pa) throws TaskSystemException {
 		
-		CompiledTaskSystemImpl setup = new CompiledTaskSystemImpl(name, getOptions());
-		setup.addOption(new UserOption.Builder("route-by").description("Route by the specified formats").build());
-		Object routeObj = pa.get("route-by");
+		Object routeObj = pa.get(ROUTE_BY_KEY);
 		String[] route = null;
 		if (routeObj!=null) {
 			 route = routeObj.toString().split(",\\s*");
@@ -82,48 +81,37 @@ public class DefaultTaskSystem implements TaskSystem {
 				.forEach(v->stops.add(v));
 		}
 		stops.add(FormatIdentifier.with(outputFormat));
+		DefaultCompiledTaskSystem setup = new DefaultCompiledTaskSystem(name, getOptions());
 		for (int i=0; i<stops.size()-1; i++) {
-			setup.addTaskGroups(getPath(imf, new TaskSystemInformation.Builder(stops.get(i), stops.get(i+1)).build(), context), pa);
+			//setup.addTaskGroups(
+			List<TaskGroupInformation> specs = getPath(imf, new TaskSystemInformation.Builder(stops.get(i), stops.get(i+1)).build(), context);
+					//pa=h
+					//);
+			for (TaskGroupInformation spec : specs) {
+				if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
+					// For enhance, only include the options required to enable the task group. Once enabled,
+					// additional options may be presented
+					for (UserOption o : spec.getRequiredOptions()) {
+						setup.addOption(o);
+					}
+				}
+				if (spec.getActivity()==TaskGroupActivity.CONVERT || matchesRequiredOptions(spec, pa, false)) {
+					TaskGroup g = imf.newTaskGroup(spec, context);
+					//TODO: these options should be on the group level instead of on the system level
+					List<UserOption> opts = g.getOptions();
+					if (opts!=null) {
+						for (UserOption o : opts) {
+							setup.addOption(o);
+						}
+					}
+					setup.addAll(g.compile(pa));
+				}
+			}
 		}
 
 		return setup;
 	}
-	
-	class CompiledTaskSystemImpl extends DefaultCompiledTaskSystem {
 
-		public CompiledTaskSystemImpl(String name, List<UserOption> options) {
-			super(name, options);
-		}
-		
-		public void addTaskGroups(List<TaskGroupInformation> specs, Map<String, Object> h) throws TaskSystemException {
-			for (TaskGroupInformation spec : specs) {
-				addTaskGroup(spec, h);
-			}
-		}
-		
-		public void addTaskGroup(TaskGroupInformation spec, Map<String, Object> h) throws TaskSystemException {
-			if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
-				// For enhance, only include the options required to enable the task group. Once enabled,
-				// additional options may be presented
-				for (UserOption o : spec.getRequiredOptions()) {
-					addOption(o);
-				}
-			}
-			if (spec.getActivity()==TaskGroupActivity.CONVERT || matchesRequiredOptions(spec, h, false)) {
-				TaskGroup g = imf.newTaskGroup(spec, context);
-				//TODO: these options should be on the group level instead of on the system level
-				List<UserOption> opts = g.getOptions();
-				if (opts!=null) {
-					for (UserOption o : opts) {
-						addOption(o);
-					}
-				}
-				addAll(g.compile(h));
-			}
-		}
-		
-	}
-	
 	/**
 	 * Finds a path for the given specifications
 	 * @param input the input format
@@ -216,6 +204,13 @@ public class DefaultTaskSystem implements TaskSystem {
 			}
 			group.add(spec);
 		}
+		return ret;
+	}
+
+	@Override
+	public List<UserOption> getOptions() {
+		List<UserOption> ret = new ArrayList<>();
+		ret.add(new UserOption.Builder(ROUTE_BY_KEY).description("Route by the specified formats").build());
 		return ret;
 	}
 
