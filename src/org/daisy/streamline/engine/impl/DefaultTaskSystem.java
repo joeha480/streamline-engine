@@ -84,11 +84,20 @@ public class DefaultTaskSystem implements TaskSystem {
 				.forEach(v->stops.add(v));
 		}
 		stops.add(FormatIdentifier.with(outputFormat));
-		Set<UserOption> optsTarget = new LinkedHashSet<>(getOptions());
+		List<UserOption> optsTarget = new ArrayList<>(getOptions());
 		List<InternalTask> taskList = new ArrayList<>();
 		for (int i=0; i<stops.size()-1; i++) {
 			List<TaskGroupInformation> specs = getPath(imf, new TaskSystemInformation.Builder(stops.get(i), stops.get(i+1)).build(), context);
+			boolean skip = true;
 			for (TaskGroupInformation spec : specs) {
+				// Remove leading enhance activities, for steps > 0
+				if (i>0 && skip) {
+					if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
+						continue;
+					} else {
+						skip = false;
+					}
+				}
 				if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
 					// For enhance, only include the options required to enable the task group. Once enabled,
 					// additional options may be presented
@@ -107,7 +116,7 @@ public class DefaultTaskSystem implements TaskSystem {
 				}
 			}
 		}
-		DefaultCompiledTaskSystem setup = new DefaultCompiledTaskSystem(name, optsTarget.stream().collect(Collectors.toList()));
+		DefaultCompiledTaskSystem setup = new DefaultCompiledTaskSystem(name, optsTarget);
 		setup.addAll(taskList);
 		return setup;
 	}
