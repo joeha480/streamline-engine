@@ -1,18 +1,21 @@
 package org.daisy.streamline.engine.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.daisy.streamline.api.media.FormatIdentifier;
 import org.daisy.streamline.api.option.UserOption;
 import org.daisy.streamline.api.tasks.CompiledTaskSystem;
 import org.daisy.streamline.api.tasks.DefaultCompiledTaskSystem;
+import org.daisy.streamline.api.tasks.InternalTask;
 import org.daisy.streamline.api.tasks.TaskGroup;
 import org.daisy.streamline.api.tasks.TaskGroupActivity;
 import org.daisy.streamline.api.tasks.TaskGroupFactoryMakerService;
@@ -81,18 +84,16 @@ public class DefaultTaskSystem implements TaskSystem {
 				.forEach(v->stops.add(v));
 		}
 		stops.add(FormatIdentifier.with(outputFormat));
-		DefaultCompiledTaskSystem setup = new DefaultCompiledTaskSystem(name, getOptions());
+		Set<UserOption> optsTarget = new LinkedHashSet<>(getOptions());
+		List<InternalTask> taskList = new ArrayList<>();
 		for (int i=0; i<stops.size()-1; i++) {
-			//setup.addTaskGroups(
 			List<TaskGroupInformation> specs = getPath(imf, new TaskSystemInformation.Builder(stops.get(i), stops.get(i+1)).build(), context);
-					//pa=h
-					//);
 			for (TaskGroupInformation spec : specs) {
 				if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
 					// For enhance, only include the options required to enable the task group. Once enabled,
 					// additional options may be presented
 					for (UserOption o : spec.getRequiredOptions()) {
-						setup.addOption(o);
+						optsTarget.add(o);
 					}
 				}
 				if (spec.getActivity()==TaskGroupActivity.CONVERT || matchesRequiredOptions(spec, pa, false)) {
@@ -100,15 +101,14 @@ public class DefaultTaskSystem implements TaskSystem {
 					//TODO: these options should be on the group level instead of on the system level
 					List<UserOption> opts = g.getOptions();
 					if (opts!=null) {
-						for (UserOption o : opts) {
-							setup.addOption(o);
-						}
+						optsTarget.addAll(opts);
 					}
-					setup.addAll(g.compile(pa));
+					taskList.addAll(g.compile(pa));
 				}
 			}
 		}
-
+		DefaultCompiledTaskSystem setup = new DefaultCompiledTaskSystem(name, optsTarget.stream().collect(Collectors.toList()));
+		setup.addAll(taskList);
 		return setup;
 	}
 
