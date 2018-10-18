@@ -4,12 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.daisy.streamline.api.media.FormatIdentifier;
 import org.daisy.streamline.api.option.UserOption;
@@ -87,17 +85,8 @@ public class DefaultTaskSystem implements TaskSystem {
 		List<UserOption> optsTarget = new ArrayList<>(getOptions());
 		List<InternalTask> taskList = new ArrayList<>();
 		for (int i=0; i<stops.size()-1; i++) {
-			List<TaskGroupInformation> specs = getPath(imf, new TaskSystemInformation.Builder(stops.get(i), stops.get(i+1)).build(), context);
-			boolean skip = true;
+			List<TaskGroupInformation> specs = getPath(imf, new TaskSystemInformation.Builder(stops.get(i), stops.get(i+1)).build(), context, i>=stops.size()-2);
 			for (TaskGroupInformation spec : specs) {
-				// Remove leading enhance activities, for steps > 0
-				if (i>0 && skip) {
-					if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
-						continue;
-					} else {
-						skip = false;
-					}
-				}
 				if (spec.getActivity()==TaskGroupActivity.ENHANCE) {
 					// For enhance, only include the options required to enable the task group. Once enabled,
 					// additional options may be presented
@@ -131,11 +120,15 @@ public class DefaultTaskSystem implements TaskSystem {
 	 * @throws TaskSystemException 
 	 */
 	static List<TaskGroupInformation> getPath(TaskGroupFactoryMakerService imf, TaskSystemInformation def, String locale) throws TaskSystemException {
+		return getPath(imf, def, locale, true);
+	}
+	
+	static List<TaskGroupInformation> getPath(TaskGroupFactoryMakerService imf, TaskSystemInformation def, String locale, boolean trailingEnhancers) throws TaskSystemException {
 		logger.info("Finding path...");
 		Set<TaskGroupInformation> specs = imf.list(locale);
 		Map<String, List<TaskGroupInformation>> byInput = byInput(specs);
 
-		return getPathSpecifications(def.getInputType().getIdentifier(), def.getOutputType().getIdentifier(), byInput);
+		return getPathSpecifications(def.getInputType().getIdentifier(), def.getOutputType().getIdentifier(), byInput, trailingEnhancers);
 	}
 	
 	/**
@@ -147,6 +140,10 @@ public class DefaultTaskSystem implements TaskSystem {
 	 * @return returns the shortest path
 	 */
 	static List<TaskGroupInformation> getPathSpecifications(String input, String output, Map<String, List<TaskGroupInformation>> _inputs) throws TaskSystemException {
+		return getPathSpecifications(input, output, _inputs, true);
+	}
+	
+	static List<TaskGroupInformation> getPathSpecifications(String input, String output, Map<String, List<TaskGroupInformation>> _inputs, boolean trailingEnhancers) throws TaskSystemException {		
 		// Changed this to an unmodifiable map, just to make sure that it is not modified.
 		Map<String, List<TaskGroupInformation>> inputs = Collections.unmodifiableMap(_inputs);
 
@@ -163,9 +160,11 @@ public class DefaultTaskSystem implements TaskSystem {
 				List<TaskGroupInformation> ret = new ArrayList<>(current.getPath());
 				ret.addAll(current.getEnhance());
 				ret.add(candidate);
-				List<TaskGroupInformation> enhancers = inputs.get(candidate.getOutputType().getIdentifier());
-				if (enhancers!=null) {
-					ret.addAll(PathInfo.getEnhancers(enhancers));
+				if (trailingEnhancers) {
+					List<TaskGroupInformation> enhancers = inputs.get(candidate.getOutputType().getIdentifier());
+					if (enhancers!=null) {
+						ret.addAll(PathInfo.getEnhancers(enhancers));
+					}
 				}
 				return ret;
 			} else {
