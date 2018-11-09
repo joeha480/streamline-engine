@@ -65,7 +65,7 @@ public class DefaultTempFileWriter implements TempFileWriter {
 		 * writing of temporary files is disabled by default.
 		 * @param value the folder
 		 * @return returns this builder
-		 * @throws IllegalArgumentException if <tt>value</tt> is not an existing directory
+		 * @throws IllegalArgumentException if <code>value</code> is not an existing directory
 		 */
 		public Builder tempFilesFolder(File value) {
 			if (!value.isDirectory()) {
@@ -80,7 +80,7 @@ public class DefaultTempFileWriter implements TempFileWriter {
 		 * is empty or null, the previously set value is used.
 		 * @param value a string representing a folder
 		 * @return returns this builder
-		 * @throws IllegalArgumentException if <tt>value</tt> is not an existing directory
+		 * @throws IllegalArgumentException if <code>value</code> is not an existing directory
 		 */
 		public Builder tempFilesFolder(String value) {
 			if (value!=null && !"".equals(value)) {
