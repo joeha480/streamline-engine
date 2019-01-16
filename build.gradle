@@ -4,7 +4,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:3.3.0'
+		classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:4.1.0'
 	}
 }
 
@@ -61,7 +61,6 @@ jar {
 			'-sources': 'true',
 			'Export-Package': 'org.daisy.streamline.engine',
 			'Import-Package':  'org.daisy.streamline.api.tasks; provide:=true, *',
-			'Service-Component': '*',
 			'Automatic-Module-Name': "$moduleName",
 			'Bundle-Name': "$moduleName",
 			'Bundle-SymbolicName': "$moduleName",
